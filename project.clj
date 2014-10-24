@@ -8,6 +8,7 @@
   :plugins [[lein-ring "0.8.13"]]
   :ring {:handler i14e.core.handler/app}
   :profiles
+  :main ^:skip-aot i14e.core.handler
   :uberjar-name "i14e.standalone.jar"
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring-mock "0.1.5"]]}})
