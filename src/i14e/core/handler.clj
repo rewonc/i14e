@@ -6,10 +6,11 @@
             [monger.collection :as mc])
   (:import [com.mongodb MongoOptions ServerAddress]))
 
-(defn cn 
+(defn cn []
   "Returns a connection to the specified DB"
-  ([] (mg/get-db (mg/connect) "test"))
-  ([db] (mg/get-db (mg/connect) db)))
+  (if (env) 
+    (mg/connect-via-uri (env))
+    (mg/get-db (mg/connect) "test") ))
 
 (defn insert [cn coll first_name last_name]
     (mc/insert cn coll {:first_name first_name  :last_name last_name})
