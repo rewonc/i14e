@@ -12,8 +12,7 @@
 (defn cn []
   "Returns a connection to the specified DB"
   (if (env) 
-    (let [{keys: [conn db]} (mg/connect-via-uri (env)) ] 
-      db )
+    ( (mg/connect-via-uri (env)) :db )
     (mg/get-db (mg/connect) "test") ))
 
 (defn insert [cn coll first_name last_name]
