@@ -18,8 +18,11 @@
 (defn retrieve [cn, coll]
     (print-str (mc/find-maps cn coll))) 
 
+(defn env [] 
+  (get (System/getenv) "MONGOHQ_URL"))
+
 (defroutes app-routes
-  (GET "/" [] "Hello World")
+  (GET "/" [] (str (env)))
   (GET "/get" [] (str (retrieve (cn) "documents")))
   (GET "/insert/:first_name/:last_name" 
     [first_name last_name] (insert (cn) "documents" first_name last_name))
