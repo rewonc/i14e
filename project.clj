@@ -6,7 +6,10 @@
                  [compojure "1.2.0"]
                  [ring/ring-defaults "0.1.2"]
                  [com.novemberain/monger "2.0.0"]
-                 [hiccup "1.0.5"]]
+                 [hiccup "1.0.5"]
+                 [clj-oauth "1.5.1"]
+                 [clj-http "1.0.0"]
+                 [org.clojure/data.json "0.2.5"]]
   :plugins [[lein-ring "0.8.13"]]
   :ring {:handler i14e.core.handler/app}
   :profiles
