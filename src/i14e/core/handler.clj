@@ -3452,7 +3452,12 @@
    ))
 
 (defroutes app-routes
-  (GET "/" [] (template [:p (str data)]))
+  (GET "/" [] (template [:div.counts
+                          [:h5 "Counts"]
+                          [:p (str "Rewon-following: " (count (get (get data :rewon-following) "ids")))]
+                          [:p (str "pmarca-followers: " (count (get (get data :followers-of-pmarca) "ids")))]
+                          [:p (str "pmarca-followers-details: " (count (get data :followers-of-pmarca-details) ))]
+                          [:p (str "Rewon-following-details: " (count (get data :user-detail) ))]] ))
   (GET "/get" [] (str (retrieve (cn) "documents")))
   (GET "/insert/:first_name/:last_name" 
     [first_name last_name] (insert (cn) "documents" first_name last_name))
