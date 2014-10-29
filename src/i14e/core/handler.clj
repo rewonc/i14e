@@ -34,7 +34,7 @@
                           [:p (str "Rewon-following-details: " (count (get tdata/data :user-detail) ))]
                           [:p (str "Steps: " "Count Rewon-Following. Run following-details against all following (drawing from cache if necessary). Now, get the followers details of a")]] ))
   (GET "/get" [] (str (retrieve (cn) "documents")))
-  (GET "/hello" [] (twitter/say-hello))
+  (GET "/hello" [] (str (twitter/uri)))
   (GET "/insert/:first_name/:last_name" 
     [first_name last_name] (insert (cn) "documents" first_name last_name))
   (route/not-found "Not Found"))
