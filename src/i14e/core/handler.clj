@@ -7,9 +7,8 @@
             [hiccup.page :as hp]
             [oauth.client :as oauth]
             [clj-http.client :as client]
-            [clojure.data.json :as json])
-  (:import [com.mongodb MongoOptions ServerAddress]))
-
+            [i14e.core.twitter-request :as twitter]
+            [clojure.data.json :as json]) )
 (defn env [] 
   (get (System/getenv) "MONGOHQ_URL"))
 
@@ -3457,8 +3456,10 @@
                           [:p (str "Rewon-following: " (count (get (get data :rewon-following) "ids")))]
                           [:p (str "pmarca-followers: " (count (get (get data :followers-of-pmarca) "ids")))]
                           [:p (str "pmarca-followers-details: " (count (get data :followers-of-pmarca-details) ))]
-                          [:p (str "Rewon-following-details: " (count (get data :user-detail) ))]] ))
+                          [:p (str "Rewon-following-details: " (count (get data :user-detail) ))]
+                          [:p (str "Steps: " "Count Rewon-Following. Run following-details against all following (drawing from cache if necessary). Now, get the followers details of a")]] ))
   (GET "/get" [] (str (retrieve (cn) "documents")))
+  (GET "/hello" [] (twitter/say-hello))
   (GET "/insert/:first_name/:last_name" 
     [first_name last_name] (insert (cn) "documents" first_name last_name))
   (route/not-found "Not Found"))
