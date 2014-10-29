@@ -3,6 +3,5 @@
             [monger.collection :as mc]
             [oauth.client :as oauth]
             [clj-http.client :as client]
-            [clojure.data.json :as json])
-  (:import [com.mongodb MongoOptions ServerAddress]))
+            [clojure.data.json :as json]) )
 (defn say-hello [] "hello")
