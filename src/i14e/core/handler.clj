@@ -35,8 +35,10 @@
                           [:p (str "Steps: " "Count Rewon-Following. Run following-details against all following (drawing from cache if necessary). Now, get the followers details of a")]] ))
   (GET "/get" [] (str (retrieve (cn) "documents")))
   (GET "/hello" [] (str (twitter/uri)))
+  (GET "/following" [] (str (twitter/following twitter/temporary-token)))
   (GET "/insert/:first_name/:last_name" 
     [first_name last_name] (insert (cn) "documents" first_name last_name))
+  (GET "/auth/callback" {params :query-params} (str (twitter/access-token-response (get params "oauth_token") (get params "oauth_verifier"))))
   (route/not-found "Not Found"))
 
 (def app
