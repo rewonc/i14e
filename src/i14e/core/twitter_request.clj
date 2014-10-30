@@ -37,7 +37,6 @@
     ;;TODO: perform validation checks on access_tokens here
     ;;store to db
     (def record (mc/insert (cn) "tokens" {:oauth_token (:oauth_token access_tokens) :oauth_token_secret (:oauth_token_secret access_tokens) :user_id (:user_id access_tokens) :screen_name (:screen_name access_tokens) }) )   ;;add to session
-    
     access_tokens ) ) 
 
 ;; SIGNING REQUESTS
@@ -49,15 +48,16 @@
   url
   query))
 
-(def temporary-token {:oauth_token "958968890-VRVPgPJLezQdxPpWhHzWRP4ii6pa11BurFd4a2gt", :oauth_token_secret "v3zMT8YKFqD5sXeREnTJzm0nZsIP6NGB7jcQKN6OyAeKX", :user_id "958968890", :screen_name "rewonfc"})
 (defn token-lookup [id] (mc/find-one (cn) "tokens" {:user_id id} ) )
 
 ;;TODO: fail for failed lookup
 (defn twitter-request [url querymap id querystring] 
   "Execute a request for the given url and id, assuming ID is stored in DB"
   (let [token (token-lookup id) ]
-    (http/get (str url querystring) 
+    (-> (http/get (str url querystring) 
       {:query-params (sign token url querymap )})
+      :body 
+      json/read-str)
     ))
 
 (defn get-followers [id] 
@@ -68,15 +68,3 @@
     (twitter-request "https://api.twitter.com/1.1/followers/ids.json" {:screen_name screen_name} id (str "?screen_name=" screen_name)) )
 (defn user-following [screen_name id] 
     (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:screen_name screen_name} id (str "?screen_name=" screen_name)) )
-
-(defn following [token] ;;this works
-  (http/get "https://api.twitter.com/1.1/friends/ids.json?user_id=958968890" 
-    {:query-params (sign token "https://api.twitter.com/1.1/friends/ids.json")})
-  )
-
-
-
-
-
-
-

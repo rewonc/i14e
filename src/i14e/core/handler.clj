@@ -28,15 +28,13 @@
 
 (defroutes app-routes
   (GET "/" [] (template/summary [:div.counts
-                          [:h5 "Counts"]
-                          [:p (str "Rewon-following: " (count (get (get tdata/data :rewon-following) "ids")))]
-                          [:p (str "pmarca-followers: " (count (get (get tdata/data :followers-of-pmarca) "ids")))]
-                          [:p (str "pmarca-followers-details: " (count (get tdata/data :followers-of-pmarca-details) ))]
-                          [:p (str "Rewon-following-details: " (count (get tdata/data :user-detail) ))]
-                          [:p (str "Steps: " "Count Rewon-Following. Run following-details against all following (drawing from cache if necessary). Now, get the followers details of a")]] ))
+    [:h5 "Some real-time queries of data"]
+    [:p (str "Count one cursored result for followers of pmarca: " (-> (twitter/followers-of "pmarca" "958968890" ) 
+      (get "ids") 
+      (count) ))]
+    ] ))
   (GET "/get" [] (str (retrieve (cn) "tokens")))
   (GET "/hello" [] (str (twitter/uri)))
-
   (GET "/req" [] (str (twitter/followers-of "pmarca" "958968890" )))
 
   (GET "/session" {session :session} 
