@@ -12,6 +12,7 @@
 (defn env [] 
   (get (System/getenv) "MONGOHQ_URL"))
 
+
 (defn cn []
   "Returns a connection to the specified DB"
   (if (env) 
@@ -33,12 +34,19 @@
                           [:p (str "pmarca-followers-details: " (count (get tdata/data :followers-of-pmarca-details) ))]
                           [:p (str "Rewon-following-details: " (count (get tdata/data :user-detail) ))]
                           [:p (str "Steps: " "Count Rewon-Following. Run following-details against all following (drawing from cache if necessary). Now, get the followers details of a")]] ))
-  (GET "/get" [] (str (retrieve (cn) "documents")))
+  (GET "/get" [] (str (retrieve (cn) "tokens")))
   (GET "/hello" [] (str (twitter/uri)))
+
+  (GET "/req" [] (str (twitter/twitter-request "https://api.twitter.com/1.1/friends/ids.json?user_id=958968890" "958968890")))
+  
+  (GET "/session" {session :session} 
+    {:status 200 :body (str "session txt" session) :headers {"Content-Type" "text/html"} :session (assoc session :hello "world") })
   (GET "/following" [] (str (twitter/following twitter/temporary-token)))
   (GET "/insert/:first_name/:last_name" 
     [first_name last_name] (insert (cn) "documents" first_name last_name))
-  (GET "/auth/callback" {params :query-params} (str (twitter/access-token-response (get params "oauth_token") (get params "oauth_verifier"))))
+  (GET "/auth/callback" {params :query-params session :session} 
+    (let [auth (twitter/access-token-response (get params "oauth_token") (get params "oauth_verifier"))]
+      {:status 200 :body (str "user saved to session: " (:screen_name auth)) :headers {"Content-Type" "text/html"} :session (assoc session :user_id (:user_id auth) ) }))
   (route/not-found "Not Found"))
 
 (def app
