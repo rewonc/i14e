@@ -41,46 +41,37 @@
     access_tokens ) ) 
 
 ;; SIGNING REQUESTS
-
-(defn sign [tokens url] (oauth/credentials consumer
-  (:oauth_token tokens)
-  (:oauth_token_secret tokens)
+;; need to adjust params in the body
+(defn sign [tokens url query] (oauth/credentials consumer
+  (get tokens "oauth_token" )
+  (get tokens "oauth_token_secret")
   :GET
   url
-  {:user_id (:user_id tokens)}))
-
-(defn twitter-request [url id] 
-  "Execute a request for the given url and id, assuming ID is stored in DB"
-  (let [tokens (mc/find-one (cn) "tokens" {:user_id id} ) ]
-    (str (http/get url {:query-params (sign tokens "https://api.twitter.com/1.1/friends/ids.json")} )))
-  )
+  query))
 
 (def temporary-token {:oauth_token "958968890-VRVPgPJLezQdxPpWhHzWRP4ii6pa11BurFd4a2gt", :oauth_token_secret "v3zMT8YKFqD5sXeREnTJzm0nZsIP6NGB7jcQKN6OyAeKX", :user_id "958968890", :screen_name "rewonfc"})
+(defn token-lookup [id] (mc/find-one (cn) "tokens" {:user_id id} ) )
+
+;;TODO: fail for failed lookup
+(defn twitter-request [url querymap id querystring] 
+  "Execute a request for the given url and id, assuming ID is stored in DB"
+  (let [token (token-lookup id) ]
+    (http/get (str url querystring) 
+      {:query-params (sign token url querymap )})
+    ))
 
 (defn get-followers [id] 
-  ;;twitter request function
-  (["followers"]))
+  (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} id) )
 (defn user-lookup [id] 
   (["followers"]))
 (defn followers-of [id] 
   (["followers"]))
 
-(defn following [token] 
+(defn following [token] ;;this works
   (http/get "https://api.twitter.com/1.1/friends/ids.json?user_id=958968890" 
     {:query-params (sign token "https://api.twitter.com/1.1/friends/ids.json")})
   )
 
-
-
-
-
-;; Response: http://localhost:3000/auth/callback?oauth_token=heckef6fBrLV6tUSU9voaroBsL7h0Shx&oauth_verifier=VBG4qE992A9ffPbQMAmZ9LPKbtCNzn0K
-
-
-
-  ;;response:
-;;{:oauth_token "958968890-VRVPgPJLezQdxPpWhHzWRP4ii6pa11BurFd4a2gt", :oauth_token_secret "v3zMT8YKFqD5sXeREnTJzm0nZsIP6NGB7jcQKN6OyAeKX", :user_id "958968890", :screen_name "rewonfc"}
-;;https://api.twitter.com/1.1/friends/ids.json?screen_name=rewonfc
 
 
 

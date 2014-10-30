@@ -37,8 +37,8 @@
   (GET "/get" [] (str (retrieve (cn) "tokens")))
   (GET "/hello" [] (str (twitter/uri)))
 
-  (GET "/req" [] (str (twitter/twitter-request "https://api.twitter.com/1.1/friends/ids.json?user_id=958968890" "958968890")))
-  
+  (GET "/req" [] (str (twitter/twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id "958968890"} "958968890" "?user_id=958968890")))
+
   (GET "/session" {session :session} 
     {:status 200 :body (str "session txt" session) :headers {"Content-Type" "text/html"} :session (assoc session :hello "world") })
   (GET "/following" [] (str (twitter/following twitter/temporary-token)))
