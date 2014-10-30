@@ -61,11 +61,13 @@
     ))
 
 (defn get-followers [id] 
-  (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} id) )
-(defn user-lookup [id] 
-  (["followers"]))
-(defn followers-of [id] 
-  (["followers"]))
+  (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} id (str "?user_id=" id)) )
+(defn user-lookup [users id] 
+    (twitter-request "https://api.twitter.com/1.1/users/lookup.json" {:user_id users} id (str "?user_id=" users)) )
+(defn followers-of [screen_name id] 
+    (twitter-request "https://api.twitter.com/1.1/followers/ids.json" {:screen_name screen_name} id (str "?screen_name=" screen_name)) )
+(defn user-following [screen_name id] 
+    (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:screen_name screen_name} id (str "?screen_name=" screen_name)) )
 
 (defn following [token] ;;this works
   (http/get "https://api.twitter.com/1.1/friends/ids.json?user_id=958968890" 
