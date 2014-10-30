@@ -1,25 +1,33 @@
 (ns i14e.core.handler
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [i14e.core.template :as template]
-            [i14e.core.twitter-request :as twitter] ) )
+            [i14e.core.twitter-request :as twitter]
+            [clojure.data.json :as json] ) )
+
+(def tokens {:oauth_token "958968890-VRVPgPJLezQdxPpWhHzWRP4ii6pa11BurFd4a2gt" :oauth_secret "v3zMT8YKFqD5sXeREnTJzm0nZsIP6NGB7jcQKN6OyAeKX" :user_id "958968890" })
 
 (defroutes app-routes
-  (GET "/hello" [] (template/summary [:div.counts
-    [:h5 "Some real-time queries of data"]
-    [:p (str "Count one cursored result for followers of pmarca: " (-> (twitter/followers-of "pmarca" "958968890" ) 
-      (get "ids") 
-      (count) ))]
-    ] ))
-  (GET "/" [] (str (twitter/uri)))
-  (GET "/req" [] (str (twitter/followers-of "pmarca" "958968890" )))
-  (GET "/session" {session :session} 
-    {:status 200 :body (str "session txt" session) :headers {"Content-Type" "text/html"} :session (assoc session :hello "world") })
-  (GET "/auth/callback" {params :query-params session :session} 
-    (let [auth (twitter/access-token-response (get params "oauth_token") (get params "oauth_verifier"))]
-      {:status 200 :body (str "user saved to session: " (:screen_name auth)) :headers {"Content-Type" "text/html"} :session (assoc session :user_id (:user_id auth) ) }))
+ 
+  (GET "/req/:screen_name/:language" [screen_name language location] 
+    (-> (twitter/followers-of screen_name tokens)
+      (get "ids")
+      (twitter/user-lookup tokens language)
+      ;(twitter/user-populate tokens)
+      ;(twitter/user-reduce)
+      str))
+  
   (route/not-found "Not Found"))
 
 (def app
-  (wrap-defaults app-routes site-defaults))
+  (wrap-defaults app-routes api-defaults))
+
+;;;;
+;Access Token  958968890-VRVPgPJLezQdxPpWhHzWRP4ii6pa11BurFd4a2gt
+;Access Token Secret v3zMT8YKFqD5sXeREnTJzm0nZsIP6NGB7jcQKN6OyAeKX
+;Access Level  Read-only
+;Owner rewonfc
+;Owner ID  958968890
+;  )
+;;;;

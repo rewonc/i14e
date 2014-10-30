@@ -15,7 +15,7 @@
     ( (mg/connect-via-uri (env)) :db )
     (mg/get-db (mg/connect) "test") ))
 
-;; OAUTH PROCESSES
+;; OAUTH KEY
 ;; TODO: store secrets in env keys"
 (def consumer (oauth/make-consumer "OHmILm1FOMKsohoKQdAdH61tX"
     "qYVAAXqm3348LNZzRkBYCKvThYXtixK7rW1dS96pYGjQdh3V7B"
@@ -24,20 +24,6 @@
     "https://api.twitter.com/oauth/authorize"
     :hmac-sha1))
 
-(def request-token (oauth/request-token consumer "http://localhost:3000/auth/callback"))
-
-(defn uri []
-  (oauth/user-approval-uri consumer 
-    (:oauth_token request-token))
-)
-
-;; CALLBACK PROCESS
-(defn access-token-response [token verifier] 
-  (let [access_tokens (oauth/access-token consumer request-token verifier)]
-    ;;TODO: perform validation checks on access_tokens here
-    ;;store to db
-    (def record (mc/insert (cn) "tokens" {:oauth_token (:oauth_token access_tokens) :oauth_token_secret (:oauth_token_secret access_tokens) :user_id (:user_id access_tokens) :screen_name (:screen_name access_tokens) }) )   ;;add to session
-    access_tokens ) ) 
 
 ;; SIGNING REQUESTS
 ;; need to adjust params in the body
@@ -48,23 +34,25 @@
   url
   query))
 
-(defn token-lookup [id] (mc/find-one (cn) "tokens" {:user_id id} ) )
-
-;;TODO: fail for failed lookup
-(defn twitter-request [url querymap id querystring] 
+;;QUERIES
+(defn twitter-request [url querymap token querystring] 
   "Execute a request for the given url and id, assuming ID is stored in DB"
-  (let [token (token-lookup id) ]
     (-> (http/get (str url querystring) 
       {:query-params (sign token url querymap )})
       :body 
-      json/read-str)
+      json/read-str) )
+
+;;introduce caching here
+(defn get-followers [id] ;;15 rate limit 
+  (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} id (str "?user_id=" id)) )
+(defn user-lookup [users token language] ;;180 rate limit, 100 ids max.
+  (let [sample (subvec users 0 100) 
+        commas (apply str (interpose "," sample))
+        resp (twitter-request "https://api.twitter.com/1.1/users/lookup.json" {:user_id commas :include_entities false} token (str "?user_id=" commas "&include_entities=false"))]
+        resp
     ))
 
-(defn get-followers [id] 
-  (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} id (str "?user_id=" id)) )
-(defn user-lookup [users id] 
-    (twitter-request "https://api.twitter.com/1.1/users/lookup.json" {:user_id users} id (str "?user_id=" users)) )
-(defn followers-of [screen_name id] 
-    (twitter-request "https://api.twitter.com/1.1/followers/ids.json" {:screen_name screen_name} id (str "?screen_name=" screen_name)) )
-(defn user-following [screen_name id] 
+(defn followers-of [screen_name token] ;;15 rate limit
+    (twitter-request "https://api.twitter.com/1.1/followers/ids.json" {:screen_name screen_name} token (str "?screen_name=" screen_name)) )
+(defn user-following [screen_name id] ;;15 rate limit
     (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:screen_name screen_name} id (str "?screen_name=" screen_name)) )
