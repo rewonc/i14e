@@ -35,7 +35,7 @@
   query))
 
 ;;QUERIES
-(defn cache-lookup [query] (mc/find-one (cn) "queries" {:query query} ) )
+(defn cache-lookup [query] (mc/find-one-as-map (cn) "queries" {:query query} ) )
 (defn cache-save [query result] (mc/insert (cn) "queries" {:query query :result result}) ) 
 
 (defn twitter-request [url querymap token querystring] 
@@ -44,17 +44,12 @@
     (if (nil? cache) 
       (let [resp (-> (http/get (str url querystring) 
           {:query-params (sign token url querymap )})
-          :body 
-          json/read-str)] 
+          :body )]
         (cache-save querystring resp)
-        resp)
-      (get cache "result") )
-  ))
+        (json/read-str resp))
+      (json/read-str (:result cache)) ) ))
 ;;introduce caching here
 
-
-(defn get-followers [id] ;;15 rate limit 
-  (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} id (str "?user_id=" id)) )
 
 (defn lang-map [users token] ;;180 rate limit, 100 ids max.
   (let [sample (subvec users 0 100) 
@@ -70,7 +65,7 @@
 
 
 (defn user-following [id token] ;;15 rate limit
-    (->(twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} token (str "?user_id=" id)) 
+    (-> (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} token (str "?user_id=" id)) 
       (get "ids")))
 
 
@@ -80,7 +75,8 @@
   
 
 (defn followers-of [screen_name token] ;;15 rate limit
-    (twitter-request "https://api.twitter.com/1.1/followers/ids.json" {:screen_name screen_name} token (str "?screen_name=" screen_name)) )
+    (-> (twitter-request "https://api.twitter.com/1.1/followers/ids.json" {:screen_name screen_name} token (str "?screen_name=" screen_name)) 
+      (get "ids") ) )
 
 (defn user-reduce [input] 
   (reduce 

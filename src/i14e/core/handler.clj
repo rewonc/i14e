@@ -16,11 +16,13 @@
       )) 
   (GET "/req/:screen_name/:language" [screen_name language location] 
     (-> (twitter/followers-of screen_name tokens)
-      (get "ids")
-      (twitter/lang-map tokens)
-      (get language)
-      (twitter/following-map tokens)
-      str))
+     ;x(twitter/lang-map tokens)
+     ;(get language)
+     ;(twitter/following-map tokens)
+     ;(twitter/user-reduce)
+     ;(sort-by val >)
+      (str)
+      ))
 
   (GET "/map/:screen_name/:language" [screen_name language location] 
     ;(-> pmarca-lm
