@@ -35,6 +35,7 @@
   query))
 
 ;;QUERIES
+
 (defn twitter-request [url querymap token querystring] 
   "Execute a request for the given url and id, assuming ID is stored in DB"
     (-> (http/get (str url querystring) 
@@ -43,16 +44,38 @@
       json/read-str) )
 
 ;;introduce caching here
+
+
 (defn get-followers [id] ;;15 rate limit 
   (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} id (str "?user_id=" id)) )
-(defn user-lookup [users token language] ;;180 rate limit, 100 ids max.
+
+(defn lang-map [users token] ;;180 rate limit, 100 ids max.
   (let [sample (subvec users 0 100) 
         commas (apply str (interpose "," sample))
         resp (twitter-request "https://api.twitter.com/1.1/users/lookup.json" {:user_id commas :include_entities false} token (str "?user_id=" commas "&include_entities=false"))]
-        resp
+        (->> 
+          (map #(vector (get % "id") (get % "lang")) resp) 
+          (reduce 
+            (fn [coll [id lang]] (if (nil? (get coll lang)) (assoc coll lang [id]) (assoc coll lang (conj (get coll lang) id))))
+            {}))
+        ;;cache requests here so we dont have to do the same thing for other languages (or places...)
     ))
+
+
+(defn user-following [id token] ;;15 rate limit
+    (->(twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} token (str "?user_id=" id)) 
+      (get "ids")))
+
+
+(defn following-map [users token] 
+  ;maybe ask how many objs can be queried at this point.
+  ((map #(user-following % token) users)))
+  
 
 (defn followers-of [screen_name token] ;;15 rate limit
     (twitter-request "https://api.twitter.com/1.1/followers/ids.json" {:screen_name screen_name} token (str "?screen_name=" screen_name)) )
-(defn user-following [screen_name id] ;;15 rate limit
-    (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:screen_name screen_name} id (str "?screen_name=" screen_name)) )
+
+(defn user-reduce [input] 
+  (reduce 
+    (fn [coll item] (if (nil? (get coll item )) (assoc coll item 1)  (assoc coll item (+ 1 (get coll item)))))
+    {} input))
