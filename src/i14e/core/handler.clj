@@ -24,7 +24,7 @@
     ;  (get "es")
     ;  (twitter/following-map tokens) 
     ;  str))
-    (str (twitter/user-reduce pmarca-following-map)))
+    (str (sort-by val > (twitter/user-reduce pmarca-following-map))))
   (route/not-found "Not Found"))
 
 (def app

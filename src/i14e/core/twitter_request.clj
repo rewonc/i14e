@@ -77,5 +77,9 @@
 
 (defn user-reduce [input] 
   (reduce 
-    (fn [coll item] (if (nil? (get coll item )) (assoc coll item 1)  (assoc coll item (+ 1 (get coll item)))))
+    (fn [coll item] 
+      (reduce (fn [subcoll ids] 
+          (if (nil? (get subcoll ids )) (assoc subcoll ids 1)  (assoc subcoll ids (+ 1 (get subcoll ids))))
+        ) coll item)
+    )
     {} input))
