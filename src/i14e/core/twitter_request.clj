@@ -71,7 +71,8 @@
 
 (defn following-map [users token] 
   ;maybe ask how many objs can be queried at this point.
-  ((map #(user-following % token) users)))
+  (map #(user-following % token) users))
+  
   
 
 (defn followers-of [screen_name token] ;;15 rate limit
