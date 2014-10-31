@@ -35,14 +35,21 @@
   query))
 
 ;;QUERIES
+(defn cache-lookup [query] (mc/find-one (cn) "queries" {:query query} ) )
+(defn cache-save [query result] (mc/insert (cn) "queries" {:query query :result result}) ) 
 
 (defn twitter-request [url querymap token querystring] 
   "Execute a request for the given url and id, assuming ID is stored in DB"
-    (-> (http/get (str url querystring) 
-      {:query-params (sign token url querymap )})
-      :body 
-      json/read-str) )
-
+  (let [cache (cache-lookup querystring)]
+    (if (nil? cache) 
+      (let [resp (-> (http/get (str url querystring) 
+          {:query-params (sign token url querymap )})
+          :body 
+          json/read-str)] 
+        (cache-save querystring resp)
+        resp)
+      (get cache "result") )
+  ))
 ;;introduce caching here
 
 
