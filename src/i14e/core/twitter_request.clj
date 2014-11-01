@@ -6,13 +6,12 @@
             [clojure.data.json :as json]) )
 
 ;; MONGODB ADAPTER
-(defn env [] 
+(def env 
   (get (System/getenv) "MONGOHQ_URL"))
 
-(defn cn []
-  "Returns a connection to the specified DB"
-  (if (env) 
-    ( (mg/connect-via-uri (env)) :db )
+(def cn
+  (if env 
+    ( (mg/connect-via-uri env) :db )
     (mg/get-db (mg/connect) "test") ))
 
 ;; OAUTH KEY
@@ -35,8 +34,8 @@
   query))
 
 ;;QUERIES
-(defn cache-lookup [query] (mc/find-one-as-map (cn) "queries" {:query query} ) )
-(defn cache-save [query result] (mc/insert (cn) "queries" {:query query :result result}) ) 
+(defn cache-lookup [query] (mc/find-one-as-map cn "queries" {:query query} ) )
+(defn cache-save [query result] (mc/insert cn "queries" {:query query :result result}) ) 
 
 (defn twitter-request [url querymap token querystring] 
   "Execute a request for the given url and id, assuming ID is stored in DB"
@@ -92,26 +91,29 @@
 
  ))
 
+(defn user-following [id token] ;;15 rate limit ;; this will be bottleneck.
+  ;;these should be async.
+    (-> (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} token (str "?user_id=" id)) 
+      (get "ids")))
+
 (defn throttled-following-map [users token] 
   (let [subset (take 10 users)]
     (->> (map #(future (user-following % token)) subset)
       (map #(deref %) )
       )) )
 
-
 (defn user-hydrate [users token] ;;180 rate limit, 100 ids max.
   (let [sample (vec users) 
         ids (map #(nth % 0) sample)
         commas (apply str (interpose "," ids))
         resp (twitter-request "https://api.twitter.com/1.1/users/lookup.json" {:user_id commas :include_entities false} token (str "?user_id=" commas "&include_entities=false"))]
-        (str resp) ))
+        (map vector sample resp) ))
 
-
-(defn user-following [id token] ;;15 rate limit ;; this will be bottleneck.
-  ;;these should be async.
-    (-> (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} token (str "?user_id=" id)) 
-      (get "ids")))
-
+(defn filter-users-by-language [users language]
+  (filter (fn [[[id counter] obj]] 
+      (= (get obj "lang") "ja")
+    ) users)
+  )
 
 (defn following-map [users token] 
   ;maybe ask how many objs can be queried at this point.

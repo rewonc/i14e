@@ -13,12 +13,14 @@
       (str)
       )) 
   (GET "/multi/:screen_name/:language" [screen_name language] 
-   (twitter/user-hydrate
-    (take 100 (sort-by val > (-> (twitter/followers-of screen_name tokens)
-     (twitter/lang-map-controller tokens language)
-     (twitter/throttled-following-map tokens)
-     (twitter/user-reduce) )))
-    tokens))
+   (apply str (twitter/filter-users-by-language 
+    (twitter/user-hydrate
+      (take 100 (sort-by val > (-> (twitter/followers-of screen_name tokens)
+        (twitter/lang-map-controller tokens language)
+        (twitter/throttled-following-map tokens)
+        (twitter/user-reduce) )))
+      tokens) 
+    language)))
 
 (GET "/req/:screen_name/:language" [screen_name language ] 
     (twitter/user-hydrate 
