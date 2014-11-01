@@ -51,7 +51,7 @@
 ;;introduce caching here
 
 
-(defn lang-map [users token] ;;180 rate limit, 100 ids max.
+(defn lang-map [users token] ;;180 rate limit, 100 ids max. we should do this 30 times. 
   (let [sample (subvec users 0 100) 
         commas (apply str (interpose "," sample))
         resp (twitter-request "https://api.twitter.com/1.1/users/lookup.json" {:user_id commas :include_entities false} token (str "?user_id=" commas "&include_entities=false"))]
@@ -63,8 +63,15 @@
         ;;cache requests here so we dont have to do the same thing for other languages (or places...)
     ))
 
+(defn user-hydrate [users token] ;;180 rate limit, 100 ids max.
+  (let [sample (vec users) 
+        ids (map #(nth % 0) sample)
+        commas (apply str (interpose "," ids))
+        resp (twitter-request "https://api.twitter.com/1.1/users/lookup.json" {:user_id commas :include_entities false} token (str "?user_id=" commas "&include_entities=false"))]
+        (str resp) ))
 
-(defn user-following [id token] ;;15 rate limit
+
+(defn user-following [id token] ;;15 rate limit ;; this will be bottleneck
     (-> (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} token (str "?user_id=" id)) 
       (get "ids")))
 
