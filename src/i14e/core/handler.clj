@@ -14,11 +14,12 @@
       )) 
   (GET "/req/:screen_name/:language" [screen_name language location] 
     (twitter/user-hydrate 
-      (take 100 (sort-by val > (-> (twitter/followers-of screen_name tokens)
-       (twitter/lang-map tokens)
-       (get language)
-       (twitter/following-map tokens)
-       (twitter/user-reduce) )))
+      (take 100 (sort-by val > 
+        (-> (twitter/followers-of screen_name tokens)
+         (twitter/lang-map tokens)
+         (get language)
+         (twitter/following-map tokens)
+         (twitter/user-reduce) )))
       tokens)
     )
   (route/not-found "Not Found"))

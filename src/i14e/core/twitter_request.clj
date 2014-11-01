@@ -63,6 +63,17 @@
         ;;cache requests here so we dont have to do the same thing for other languages (or places...)
     ))
 
+(defn lang-map-controller [users token]
+  ;;if count is > 100, take first 100 and recur the rest
+  ;;if count is < 100, go through with it
+  ;;pass lang map between requests and conj it 
+  
+  ;;step 1: separate it into blocks of 100 ;; subvec v and v
+  ;;step 2: let them all be reduced to lang maps
+  ;;step 3: aggregate all the lang maps
+  (let [sample (subvec users 0 100) 
+        commas (apply str (interpose "," sample))]
+  ))
 (defn user-hydrate [users token] ;;180 rate limit, 100 ids max.
   (let [sample (vec users) 
         ids (map #(nth % 0) sample)
@@ -71,7 +82,8 @@
         (str resp) ))
 
 
-(defn user-following [id token] ;;15 rate limit ;; this will be bottleneck
+(defn user-following [id token] ;;15 rate limit ;; this will be bottleneck.
+  ;;these should be async.
     (-> (twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id id} token (str "?user_id=" id)) 
       (get "ids")))
 
