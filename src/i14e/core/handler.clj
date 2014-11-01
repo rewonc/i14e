@@ -12,7 +12,15 @@
     (-> (twitter/twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id "958968890"} tokens (str "?user_id=958968890")) 
       (str)
       )) 
-  (GET "/req/:screen_name/:language" [screen_name language location] 
+  (GET "/multi/:screen_name/:language" [screen_name language] 
+   (twitter/user-hydrate
+    (take 100 (sort-by val > (-> (twitter/followers-of screen_name tokens)
+     (twitter/lang-map-controller tokens language)
+     (twitter/throttled-following-map tokens)
+     (twitter/user-reduce) )))
+    tokens))
+
+(GET "/req/:screen_name/:language" [screen_name language ] 
     (twitter/user-hydrate 
       (take 100 (sort-by val > 
         (-> (twitter/followers-of screen_name tokens)
@@ -35,4 +43,5 @@
 ;Owner ID  958968890
 ;  )
 ;;;;
-;; dan rob hiem? karim mitch
+;; dan rob hiem? karim mitchi
+

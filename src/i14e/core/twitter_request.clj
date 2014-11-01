@@ -49,6 +49,7 @@
         (json/read-str resp))
       (json/read-str (:result cache)) ) ))
 ;;introduce caching here
+;;check status before caching -- i.e. only cache 200's
 
 
 (defn lang-map [users token] ;;180 rate limit, 100 ids max. we should do this 30 times. 
@@ -63,17 +64,41 @@
         ;;cache requests here so we dont have to do the same thing for other languages (or places...)
     ))
 
-(defn lang-map-controller [users token]
-  ;;if count is > 100, take first 100 and recur the rest
-  ;;if count is < 100, go through with it
-  ;;pass lang map between requests and conj it 
-  
-  ;;step 1: separate it into blocks of 100 ;; subvec v and v
-  ;;step 2: let them all be reduced to lang maps
-  ;;step 3: aggregate all the lang maps
-  (let [sample (subvec users 0 100) 
-        commas (apply str (interpose "," sample))]
-  ))
+(defn langmap [users token] ;;180 rate limit, 100 ids max. we should do this 30 times. 
+  (let [commas (apply str (interpose "," users))
+        resp (twitter-request "https://api.twitter.com/1.1/users/lookup.json" {:user_id commas :include_entities false} token (str "?user_id=" commas "&include_entities=false"))]
+        (->> 
+          (map #(vector (get % "id") (get % "lang")) resp) 
+          (reduce 
+            (fn [coll [id lang]] (if (nil? (get coll lang)) (assoc coll lang [id]) (assoc coll lang (conj (get coll lang) id))))
+            {}))
+        ;;cache requests here so we dont have to do the same thing for other languages (or places...)
+    ))
+
+(defn lang-map-controller [users token language]
+
+  (defn chunk [coll users] 
+      (if (= (count users) 0) coll
+       (chunk (conj coll (subvec users 0 100) ) (subvec users 100) ) ) )
+
+  (let [chunks (chunk '() users) 
+        lazy (take 20 chunks) ]
+      ;;map all items in the sequence to fn that returns a future obj
+      (->> (map #(future (langmap % token)) lazy)
+          (reduce (fn [coll item] (into coll (get @item language))) [] )
+        )
+      ;;Now we have a lazy sequence. This ought to asynchronously add 
+      ;;futures to a collection, then read them all in order. 
+
+ ))
+
+(defn throttled-following-map [users token] 
+  (let [subset (take 10 users)]
+    (->> (map #(future (user-following % token)) subset)
+      (map #(deref %) )
+      )) )
+
+
 (defn user-hydrate [users token] ;;180 rate limit, 100 ids max.
   (let [sample (vec users) 
         ids (map #(nth % 0) sample)
