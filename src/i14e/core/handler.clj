@@ -20,18 +20,7 @@
         (twitter/throttled-following-map tokens)
         (twitter/user-reduce) )))
       tokens) 
-    language)))
-
-(GET "/req/:screen_name/:language" [screen_name language ] 
-    (twitter/user-hydrate 
-      (take 100 (sort-by val > 
-        (-> (twitter/followers-of screen_name tokens)
-         (twitter/lang-map tokens)
-         (get language)
-         (twitter/following-map tokens)
-         (twitter/user-reduce) )))
-      tokens)
-    )
+      language)))
   (route/not-found "Not Found"))
 
 (def app
