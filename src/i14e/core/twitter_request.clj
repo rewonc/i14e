@@ -111,7 +111,7 @@
 
 (defn filter-users-by-language [users language]
   (filter (fn [[[id counter] obj]] 
-      (= (get obj "lang") "ja")
+      (= (get obj "lang") language)
     ) users)
   )
 
