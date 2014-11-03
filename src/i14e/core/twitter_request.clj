@@ -3,7 +3,8 @@
             [monger.collection :as mc]
             [oauth.client :as oauth]
             [clj-http.client :as http]
-            [clojure.data.json :as json]) )
+            [clojure.data.json :as json]
+            [i14e.core.secrets :as secrets]) )
 
 ;; MONGODB ADAPTER
 (def env 
@@ -15,9 +16,9 @@
     (mg/get-db (mg/connect) "test") ))
 
 ;; OAUTH KEY
-;; TODO: store secrets in env keys"
-(def consumer (oauth/make-consumer "OHmILm1FOMKsohoKQdAdH61tX"
-    "qYVAAXqm3348LNZzRkBYCKvThYXtixK7rW1dS96pYGjQdh3V7B"
+(def consumer (oauth/make-consumer 
+    (:consumer_key secrets/secrets)
+    (:consumer_secret secrets/secrets)
     "https://api.twitter.com/oauth/request_token"
     "https://api.twitter.com/oauth/access_token"
     "https://api.twitter.com/oauth/authorize"

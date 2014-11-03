@@ -8,3 +8,4 @@ pom.xml.asc
 *.class
 /.lein-*
 /.nrepl-port
+/src/i14e/core/secrets.clj
