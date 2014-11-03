@@ -6,37 +6,24 @@
             [i14e.core.twitter-request :as twitter]
             [clojure.data.json :as json] ) )
 
-(def tokens {:oauth_token "958968890-VRVPgPJLezQdxPpWhHzWRP4ii6pa11BurFd4a2gt" :oauth_secret "v3zMT8YKFqD5sXeREnTJzm0nZsIP6NGB7jcQKN6OyAeKX" :user_id "958968890" })
 (defroutes app-routes
-  (GET "/cache" [] 
-    (-> (twitter/twitter-request "https://api.twitter.com/1.1/friends/ids.json" {:user_id "958968890"} tokens (str "?user_id=958968890")) 
-      (str)
-      )) 
-  (GET "/multi/:screen_name/:language" [screen_name language] 
-   {:status 200 :headers {"content-type" "text-json"} :body 
-    (json/write-str  
-      (into []
-       (twitter/filter-users-by-language 
-        (twitter/user-hydrate
-          (take 100 (sort-by val > (-> (twitter/followers-of screen_name tokens)
-            (twitter/lang-map-controller tokens language)
-            (twitter/throttled-following-map tokens)
-            (twitter/user-reduce) )))
-          tokens) 
-          language) ))
-     })
+  (GET "/multi/:screen_name/:language" {params :params} 
+    (let [tokens {:oauth_token (:oauth_token params) :oauth_secret (:oauth_secret params)} screen_name (:screen_name params) language (:language params)]
+
+     {:status 200 :headers {"content-type" "text-json"} :body 
+      (json/write-str  
+        (into []
+         (twitter/filter-users-by-language 
+          (twitter/user-hydrate
+            (take 100 (sort-by val > (-> (twitter/followers-of screen_name tokens)
+              (twitter/lang-map-controller tokens language)
+              (twitter/throttled-following-map tokens)
+              (twitter/user-reduce) )))
+            tokens) 
+            language) )) }) )
   (route/not-found "Not Found"))
 
 (def app
   (wrap-defaults app-routes api-defaults))
 
-;;;;
-;Access Token  958968890-VRVPgPJLezQdxPpWhHzWRP4ii6pa11BurFd4a2gt
-;Access Token Secret v3zMT8YKFqD5sXeREnTJzm0nZsIP6NGB7jcQKN6OyAeKX
-;Access Level  Read-only
-;Owner rewonfc
-;Owner ID  958968890
-;  )
-;;;;
-;; dan rob hiem? karim mitchi
 
